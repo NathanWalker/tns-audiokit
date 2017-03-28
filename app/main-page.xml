@@ -1,0 +1,11 @@
+<Page xmlns="http://schemas.nativescript.org/tns.xsd" 
+  loaded="pageLoaded" class="page"
+  xmlns:audio="audioplot">
+  <StackLayout class="p-20">
+    <Button text="{{ btnText }}" tap="{{ toggleRecord }}" class="btn btn-primary" />
+    <audio:AudioPlot id="audioplot" backgroundColor="#efefef" height="300" width="300"
+      plotColor="purple"
+      fill="true"
+      mirror="true"></audio:AudioPlot>
+  </StackLayout>
+</Page>

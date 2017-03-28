@@ -1,0 +1,31 @@
+{
+  "description": "NativeScript Application",
+  "license": "SEE LICENSE IN <your-license-filename>",
+  "readme": "NativeScript Application",
+  "repository": "<fill-your-repository-here>",
+  "nativescript": {
+    "id": "org.nativescript.tnsaudiokit",
+    "tns-ios": {
+      "version": "2.5.0"
+    }
+  },
+  "scripts": {
+    "build.plugin": "tsc nativescript-audiokit/audiokit.ios.ts",
+    "remove.plugin": "tns plugin remove nativescript-audiokit",
+    "add.plugin": "tns plugin add nativescript-audiokit",
+    "prepare.plugin": "npm run build.plugin && npm run remove.plugin && npm run add.plugin",
+    "setup": "npm run build.plugin && npm i",
+    "start": "npm run prepare.plugin && tns run ios --emulator"
+  },
+  "dependencies": {
+    "nativescript-audiokit": "file:nativescript-audiokit",
+    "nativescript-theme-core": "~1.0.2",
+    "tns-core-modules": "2.5.2"
+  },
+  "devDependencies": {
+    "nativescript-dev-android-snapshot": "^0.*.*",
+    "nativescript-dev-typescript": "~0.3.5",
+    "tns-platform-declarations": "^2.5.2",
+    "typescript": "~2.1.0"
+  }
+}
