@@ -1,7 +1,6 @@
 {
   "name": "nativescript-audiokit",
   "version": "1.0.0",
-  "main": "audiokit",
   "nativescript": {
     "platforms": {
       "ios": "2.5.0"

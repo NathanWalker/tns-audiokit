@@ -3,9 +3,20 @@
   xmlns:audio="audioplot">
   <StackLayout class="p-20">
     <Button text="{{ btnText }}" tap="{{ toggleRecord }}" class="btn btn-primary" />
-    <audio:AudioPlot id="audioplot" backgroundColor="#efefef" height="300" width="300"
-      plotColor="purple"
-      fill="true"
-      mirror="true"></audio:AudioPlot>
+    <Label text="Mic Booster:" class="h4" />
+    <Slider minValue="0" maxValue="1" value="{{ micVolume }}" class="slider" />
+    <audio:AudioPlot id="audioplot" backgroundColor="#000" height="50" width="350"
+      plotColor="yellow"
+      fill="false"
+      mirror="true"
+      plotType="buffer"></audio:AudioPlot>
+    <Label text="Moog Frequency:" class="h4" />
+    <Slider minValue="0" maxValue="5000" value="{{ moogFreq }}" class="slider" />
+    <Label text="Moog Resonance:" class="h4" />
+    <Slider minValue="0" maxValue="1" value="{{ moogRes }}" class="slider" />
+    <Label text="Reverb:" class="h4" />
+    <Slider minValue="0" maxValue="1" value="{{ reverb }}" class="slider" />
+    <Button text="{{ playBtnText }}" tap="{{ togglePlay }}" class="btn btn-primary" />
+    <Button text="Save" tap="{{ save }}" class="btn btn-primary" />
   </StackLayout>
 </Page>

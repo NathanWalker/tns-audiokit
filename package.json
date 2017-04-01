@@ -1,10 +1,11 @@
 {
+  "name": "nStudio",
   "description": "NativeScript Application",
   "license": "SEE LICENSE IN <your-license-filename>",
   "readme": "NativeScript Application",
   "repository": "<fill-your-repository-here>",
   "nativescript": {
-    "id": "org.nativescript.tnsaudiokit",
+    "id": "com.wwwalkerrun.nStudio",
     "tns-ios": {
       "version": "2.5.0"
     }

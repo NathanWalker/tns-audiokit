@@ -1,2 +1,2 @@
 platform :ios, '9.0'
-pod 'AudioKit', '~> 3.5'
+pod 'AudioKit', '3.5.3'
