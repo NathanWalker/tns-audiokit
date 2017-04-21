@@ -9,8 +9,17 @@
         "noImplicitAny": false,
         "skipLibCheck": true,
         "lib": [
-            "es2016"
-        ]
+            "es2016",
+            "es6",
+            "dom"
+        ],
+        "baseUrl": ".",
+        "paths": {
+            "*": [
+                "./node_modules/tns-core-modules/*",
+                "./node_modules/*"
+            ]
+        }
     },
     "exclude": [
         "node_modules",

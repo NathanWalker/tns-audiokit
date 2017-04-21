@@ -2,6 +2,7 @@ import { Observable } from 'data/observable';
 import { View } from 'ui/core/view';
 import { Color } from 'color';
 import { knownFolders } from 'file-system';
+import * as utils from "utils/utils";
 
 enum RecordState {
   readyToRecord,
@@ -18,6 +19,7 @@ export class RecordModel extends Observable {
   private _micBooster: AKBooster;
   private _recorder: AKNodeRecorder;
   private _player: AKAudioPlayer;
+  private _playerSaved: AVAudioPlayer;
 
   // effects
   private _moogLadder: AKMoogLadder;
@@ -34,17 +36,19 @@ export class RecordModel extends Observable {
   constructor(view: AudioPlot) {
     super();
     this._audioPlotView = view;
+    
+    (<any>AVAudioFile).cleanTempDirectory();
 
-    console.log('AKSettings', AKSettings); 
+    console.log('cleaned tmp files...');
+
     console.log('AKSettings.bufferLength', AKSettings.bufferLength);  
     console.log('BufferLength.Medium', BufferLength.Medium);    
     // audio setup 
-    // CRASH  
-    // AKSettings.bufferLength = BufferLength.Medium;
-    // console.log('AKSettings.bufferLength', AKSettings.bufferLength);   
+    AKSettings.setBufferLength(BufferLength.Medium);
+    console.log('AKSettings.bufferLength after set:', AKSettings.bufferLength);   
 
     try {
-      console.log('AKSettings.setSessionWithCategoryOptionsError', AKSettings.setSessionWithCategoryOptionsError);   
+      console.log('AKSettings.setSessionWithCategoryOptionsError', AKSettings.setSessionWithCategoryOptionsError);  
       let setSession = AKSettings.setSessionWithCategoryOptionsError(SessionCategory.PlayAndRecord, AVAudioSessionCategoryOptions.DefaultToSpeaker);
       console.log('category session is set:', setSession);  
     } catch (err) {
@@ -53,14 +57,14 @@ export class RecordModel extends Observable {
    
     this._mic = AKMicrophone.alloc().init();
 
-    this._micMixer = AKMixer.alloc().init();   
-    this._micMixer.connect(this._mic);
+    this._micMixer = AKMixer.alloc().init(NSArray.arrayWithObject(this._mic));
+    // this._micMixer.connect(this._mic);
 
-    this._micBooster = AKBooster.alloc().initGain(this._micMixer, 0);
+    this._micBooster = AKBooster.alloc().initGain(<any>this._micMixer, 0);
 
     try {
       
-      this._recorder = AKNodeRecorder.alloc().initWithNodeFileError(this._micMixer, null);
+      this._recorder = AKNodeRecorder.alloc().initWithNodeFileError(<any>this._micMixer, null);
       console.log('this._recorder:', this._recorder);    
     } catch (err) {
       console.log(err);
@@ -89,31 +93,26 @@ export class RecordModel extends Observable {
     this._reverb = AKReverb.alloc().initDryWetMix(this._player, .5);
     // this._reverbCostello = AKCostelloReverb.alloc().initFeedbackCutoffFrequency(this._player, .92, 9900);
     
-    this._mainMixer = AKMixer.alloc().init();
-    console.log('this._mainMixer:', this._mainMixer);     
+    this._mainMixer = AKMixer.alloc().init(null);
     // this._mainMixer.connect(this._moogLadder);
     this._mainMixer.connect(this._reverb);
+    // this._mainMixer.connect(this._player);
     // this._mainMixer.connect(this._reverbCostello);
     this._mainMixer.connect(this._micBooster); 
-    console.log('this._mainMixer:', this._mainMixer.avAudioNode);  
+    
     let inputs = AudioKit.availableInputs;
     console.log('AudioKit.availableInputs:', inputs);  
-    let outputs = AudioKit.availableOutputs;
-    console.log('AudioKit.availableOutputs:', outputs);   
+    let outputs = AudioKit.outputs;
+    console.log('AudioKit.outputs:', outputs);   
 
     // Will see null output here    
     // console.log('AudioKit.output:', AudioKit.output);    
     // console.log('this._mainMixer:', this._mainMixer);     
 
-    // THIS CRASHES :( --------
-    // If you uncomment the following 2 lines, app will crash when trying
-    // to use the output setter....
-    // AudioKit.output = this._mainMixer;
-    // AudioKit.start();
+    // THIS uses didSet in Swift, therefore a set method is generated
+    AudioKit.setOutput(<any>this._mainMixer);
+    AudioKit.start();
 
-    // THIS WORKS ---------
-    // It uses the Swift output setter internally in this function
-    AudioKit.auditionTestWithNodeDuration(this._mainMixer, .1);  
     console.log('AudioKit.output:', AudioKit.output);   
 
     // will see this in the log if no crash above occurs
@@ -152,8 +151,16 @@ export class RecordModel extends Observable {
     if (this._state !== RecordState.recording) {
       this._state = RecordState.readyToRecord;
       // resetting (clear previous recordings)
-      if (this._recorder)
-        this._recorder.resetAndReturnError();  
+      if (this._recorder) {
+        let resetErr;
+        try {
+          resetErr = this._recorder.resetAndReturnError();  
+        } catch (err) {
+          console.log('recorder reset error:', err);
+        }
+        console.log('recorder reset:', resetErr);
+
+      }
     }
     switch (this._state) {
       case RecordState.readyToRecord:
@@ -162,6 +169,10 @@ export class RecordModel extends Observable {
         if (AKSettings.headPhonesPlugged) {
             this._micBooster.gain = 1;
         }
+
+        // testing recording while other track is playing
+        if (this._playerSaved) this._playerSaved.play();
+
         try {
             let r = this._recorder.recordAndReturnError();  
             console.log('recording:', r);
@@ -183,7 +194,7 @@ export class RecordModel extends Observable {
           this._recorder.stop();
           
           console.log('this._player.audioFile:', this._player.audioFile); 
-          console.log('this._player.audioFile.exportAsynchronously:', (<any>this._player.audioFile).exportAsynchronously);  
+          
           break;  
 
     }  
@@ -194,20 +205,53 @@ export class RecordModel extends Observable {
       this._state = RecordState.playing;
       console.log('this._player.currentTime:', this._player.currentTime);
 
-      if (this._player.currentTime === 0 || this._player.currentTime === this._player.duration) {
-        // if at beginning or end, replay
-        this._player.playFromToWhen(0, 0, 0);
+      if (this._playerSaved) {
+        this._playerSaved.play();
       } else {
-        // just resume
-        this._player.resume();
-      }
+        if (this._player.currentTime === 0 || this._player.currentTime === this._player.duration) {
+          // if at beginning or end, replay
+          this._player.start();
+        } else {
+          // just resume
+          this._player.resume();
+        }
+      }    
     } else if (this._state === RecordState.playing) {
       this._state = RecordState.readyToPlay;
-      this._player.pause();
+      if (this._playerSaved) {
+        this._playerSaved.pause();
+      } else {
+        this._player.pause();
+      }
     } 
   }  
 
   public save() {
+    return new Promise((resolve, reject) => {
+      console.log('this._recorder.audioFile.url:', this._recorder.audioFile.url.absoluteString); 
+
+      // console.log('BaseDirectory.Documents:', BaseDirectory.Documents);
+  //     console.log('ExportFormat.M4a:', ExportFormat.M4a);
+
+      // ** Curiously, exporting will not work if you comment out this console log!! ** //    
+      console.log('stringUTIWithType:', AKAudioFile.stringUTIWithType(ExportFormat.M4a));
+
+  // console.log('this._recorder.audioFile.avAsset:', this._recorder.audioFile.avAsset);
+  // console.log('this._recorder.audioFile.maxLevel:', this._recorder.audioFile.maxLevel);
+
+      let fileName = `recording-${Date.now()}.m4a`;
+      this._recorder.audioFile.exportAsynchronouslyWithNameBaseDirExportFormatFromSampleToSampleCallback(fileName, BaseDirectory.Documents, ExportFormat.M4a, null, null, (af: AKAudioFile, err: NSError) => {
+        console.log('if theres an error:', err);
+        console.log('file written!', af);
+        let filePath = documentsPath(fileName);
+        console.log('filePath:', filePath);  
+        let fileUrl = NSURL.fileURLWithPath(filePath);
+        this._playerSaved = AVAudioPlayer.alloc().initWithContentsOfURLError(fileUrl);
+      });
+    });
+  }
+
+  public saveOLD() {
     return new Promise((resolve, reject) => {
       let filePath = documentsPath(`recording-${Date.now()}.caf`);
         console.log('filePath:', filePath);  
@@ -254,14 +298,19 @@ export class RecordModel extends Observable {
 
 
 
- /// *** works to write the file but doesn't play back the file if you open it in Finder and play it back ***///  
+      /// *** works to write the file but doesn't play back the file if you open it in Finder and play it back ***///  
       let outputFile = AKAudioFile.alloc().initForWritingSettingsError(fileUrl, <any>recordOptions);
       console.log('outputFile:', outputFile);  
       console.log('processingFormat:', this._player.audioFile.processingFormat);
       
-      this._player.avAudioNode.installTapOnBusBufferSizeFormatBlock(
+      // this._player.avAudioNode.installTapOnBusBufferSizeFormatBlock(
+      //   0,
+      //   8192 /* this 8192 value is random, not sure what it should be? */, this._player.avAudioNode.inputFormatForBus(0),
+      //   (buffer: AVAudioPCMBuffer, time: AVAudioTime) => {
+      this._player.playFromToWhen(0, 0, 0);
+      this._mainMixer.avAudioNode.installTapOnBusBufferSizeFormatBlock(
         0,
-        8192 /* this 8192 value is random, not sure what it should be? */, this._player.avAudioNode.inputFormatForBus(0),
+        8192 /* this 8192 value is random, not sure what it should be? */, this._player.audioFile.processingFormat,
         (buffer: AVAudioPCMBuffer, time: AVAudioTime) => {
 
         console.log('Buffer Size:',buffer);
@@ -273,21 +322,18 @@ export class RecordModel extends Observable {
               let writeErr = outputFile.writeFromBufferError(buffer);
               console.log('writeErr:', writeErr);
         } else {
-          this._player.avAudioNode.removeTapOnBus(0);
+          // this._player.avAudioNode.removeTapOnBus(0);
+          this._mainMixer.avAudioNode.removeTapOnBus(0);
           console.log('removed tap!');
           console.log('wrote file:', filePath); 
           resolve();
         }
       });
-
-
-
     });
   }
 }
 
 export class AudioPlot extends View {
-  private _ios: AKNodeOutputPlot;
   private _recordModel: RecordModel;
 
   constructor() {
@@ -295,42 +341,34 @@ export class AudioPlot extends View {
     console.log('AudioPlot constructor');
     this._recordModel = new RecordModel(this);
     console.log('AudioPlot _recordModel:', this._recordModel);
-    this._ios = AKNodeOutputPlot.alloc().initFrameBufferSize(this._recordModel.mic, CGRectMake(0, 0, 0, 0), 50);
+    this.nativeView = AKNodeOutputPlot.alloc().initFrameBufferSize(this._recordModel.mic, CGRectMake(0, 0, 0, 0), 1024);
       
-    console.log('AudioPlot AKNodeOutputPlot:', this._ios);
-  }
-
-  public get ios() {
-      return this._ios;  
-  }  
-
-  public get _nativeView() {
-      return this._ios;  
-  }  
+    console.log('AudioPlot AKNodeOutputPlot:', this.nativeView);
+  } 
 
   set plotColor(value: string) {
     console.log(`AudioPlot color: ${value}`);
-    this._ios.color = new Color(value).ios;
+    this.nativeView.color = new Color(value).ios;
   }
   
   set fill(value: boolean) {
     console.log(`AudioPlot fill: ${value}`);
-    this._ios.shouldFill = value;
+    this.nativeView.shouldFill = value;
   }
   
   set mirror(value: boolean) {
     console.log(`AudioPlot mirror: ${value}`);
-    this._ios.shouldMirror = value;
+    this.nativeView.shouldMirror = value;
   }
   
   set plotType(type: string) {
     console.log(`AudioPlot plotType: ${type}`);
     switch (type) {
       case 'buffer':
-        this._ios.plotType = EZPlotType.Buffer;
+        this.nativeView.plotType = EZPlotType.Buffer;
         break;
       case 'rolling':
-        this._ios.plotType = EZPlotType.Rolling;
+        this.nativeView.plotType = EZPlotType.Rolling;
         break;
     }
   }  
@@ -367,7 +405,7 @@ export class AudioPlot extends View {
 
   onLoaded() {
     super.onLoaded();
-    console.log('AudioPlot onLoaded:', this._ios);
+    console.log('AudioPlot onLoaded:', this.nativeView);
   }
 }
 

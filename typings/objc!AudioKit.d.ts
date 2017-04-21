@@ -143,7 +143,13 @@ declare class AKAudioFile extends AVAudioFile {
 
 	static alloc(): AKAudioFile; // inherited from NSObject
 
+	static createFileWithDirFileWriteError(dir: BaseDirectory, path: string, write: boolean): string;
+
 	static new(): AKAudioFile; // inherited from NSObject
+
+	static silentWithSamplesBaseDirNameError(samples: number, baseDir: BaseDirectory, name: string): AKAudioFile;
+
+	static stringUTIWithType(type: ExportFormat): string;
 
 	readonly avAsset: AVURLAsset;
 
@@ -164,6 +170,42 @@ declare class AKAudioFile extends AVAudioFile {
 	static readonly queuedAsyncProcessCount: number;
 
 	static readonly scheduledAsyncProcessesCount: number;
+
+	static readonly supportedFileExtensions: NSArray<string>;
+
+	constructor(o: { fromAVAudioPCMBuffer: AVAudioPCMBuffer; baseDir: BaseDirectory; name: string; });
+
+	constructor(o: { createFileFromFloats: NSArray<NSArray<number>>; baseDir: BaseDirectory; name: string; });
+
+	constructor(o: { readFileName: string; baseDir: BaseDirectory; });
+
+	constructor(o: { writeIn: BaseDirectory; name: string; settings: NSDictionary<string, any>; });
+
+	appendAsynchronouslyWithFileBaseDirNameCompletionHandler(file: AKAudioFile, baseDir: BaseDirectory, name: string, completionHandler: (p1: AKAudioFile, p2: NSError) => void): void;
+
+	appendedByFileBaseDirNameError(file: AKAudioFile, baseDir: BaseDirectory, name: string): AKAudioFile;
+
+	exportAsynchronouslyWithNameBaseDirExportFormatFromSampleToSampleCallback(name: string, baseDir: BaseDirectory, exportFormat: ExportFormat, fromSample: number, toSample: number, callback: (p1: AKAudioFile, p2: NSError) => void): void;
+
+	extractAsynchronouslyFromSampleToSampleBaseDirNameCompletionHandler(fromSample: number, toSample: number, baseDir: BaseDirectory, name: string, completionHandler: (p1: AKAudioFile, p2: NSError) => void): void;
+
+	extractedFromSampleToSampleBaseDirNameError(fromSample: number, toSample: number, baseDir: BaseDirectory, name: string): AKAudioFile;
+
+	initFromAVAudioPCMBufferBaseDirNameError(buffer: AVAudioPCMBuffer, baseDir: BaseDirectory, name: string): this;
+
+	initWithCreateFileFromFloatsBaseDirNameError(floatsArrays: NSArray<NSArray<number>>, baseDir: BaseDirectory, name: string): this;
+
+	initWithReadFileNameBaseDirError(name: string, baseDir: BaseDirectory): this;
+
+	initWithWriteInNameSettingsError(baseDir: BaseDirectory, name: string, settings: NSDictionary<string, any>): this;
+
+	normalizeAsynchronouslyWithBaseDirNameNewMaxLevelCompletionHandler(baseDir: BaseDirectory, name: string, newMaxLevel: number, completionHandler: (p1: AKAudioFile, p2: NSError) => void): void;
+
+	normalizedWithBaseDirNameNewMaxLevelError(baseDir: BaseDirectory, name: string, newMaxLevel: number): AKAudioFile;
+
+	reverseAsynchronouslyWithBaseDirNameCompletionHandler(baseDir: BaseDirectory, name: string, completionHandler: (p1: AKAudioFile, p2: NSError) => void): void;
+
+	reversedWithBaseDirNameError(baseDir: BaseDirectory, name: string): AKAudioFile;
 }
 
 declare class AKAudioPlayer extends AKNode {
@@ -171,6 +213,8 @@ declare class AKAudioPlayer extends AKNode {
 	static alloc(): AKAudioPlayer; // inherited from NSObject
 
 	static new(): AKAudioPlayer; // inherited from NSObject
+
+	static secondsToAVAudioTimeWithHostTimeTime(hostTime: number, time: number): AVAudioTime;
 
 	readonly audioFile: AKAudioFile;
 
@@ -196,6 +240,8 @@ declare class AKAudioPlayer extends AKNode {
 
 	reversed: boolean;
 
+	scheduledAVTime: AVAudioTime;
+
 	scheduledTime: number;
 
 	startTime: number;
@@ -208,7 +254,9 @@ declare class AKAudioPlayer extends AKNode {
 
 	pause(): void;
 
-	playFromToWhen(time: number, endTime: number, scheduledTime: number): void;
+	playFromToAvTime(time: number, endTime: number, avTime: AVAudioTime): void;
+
+	playFromToWhen(startTime: number, endTime: number, scheduledTime: number): void;
 
 	reloadFileAndReturnError(): boolean;
 
@@ -219,6 +267,8 @@ declare class AKAudioPlayer extends AKNode {
 	start(): void;
 
 	stop(): void;
+
+	stopAtNextLoopEnd(): void;
 }
 
 declare class AKAudioUnit extends AUAudioUnit implements AKKernelUnit {
@@ -481,6 +531,38 @@ declare class AKBoosterAudioUnit extends AKAudioUnit {
 	static new(): AKBoosterAudioUnit; // inherited from NSObject
 
 	gain: number;
+}
+
+declare class AKBrownianNoise extends AKNode {
+
+	static alloc(): AKBrownianNoise; // inherited from NSObject
+
+	static new(): AKBrownianNoise; // inherited from NSObject
+
+	amplitude: number;
+
+	readonly isStarted: boolean;
+
+	rampTime: number;
+
+	static readonly ComponentDescription: AudioComponentDescription;
+
+	constructor(o: { amplitude: number; });
+
+	initWithAmplitude(amplitude: number): this;
+
+	start(): void;
+
+	stop(): void;
+}
+
+declare class AKBrownianNoiseAudioUnit extends AKAudioUnit {
+
+	static alloc(): AKBrownianNoiseAudioUnit; // inherited from NSObject
+
+	static new(): AKBrownianNoiseAudioUnit; // inherited from NSObject
+
+	amplitude: number;
 }
 
 declare class AKButton extends UIView {
@@ -777,6 +859,25 @@ declare class AKCostelloReverbAudioUnit extends AKAudioUnit {
 	feedback: number;
 }
 
+declare class AKCustomUgen extends NSObject {
+
+	static alloc(): AKCustomUgen; // inherited from NSObject
+
+	static new(): AKCustomUgen; // inherited from NSObject
+
+	readonly argTypes: string;
+
+	readonly callComputeFunction: interop.FunctionReference<(p1: AKCustomUgen) => void>;
+
+	readonly name: string;
+
+	stack: AKSporthStack;
+
+	userData: any;
+
+	duplicate(): AKCustomUgen;
+}
+
 declare class AKDCBlock extends AKNode {
 
 	static alloc(): AKDCBlock; // inherited from NSObject
@@ -1004,6 +1105,50 @@ declare class AKDryWetMixer extends AKNode {
 	constructor(o: { balance: AKNode; });
 
 	initBalance(dry: AKNode, wet: AKNode, balance: number): this;
+}
+
+declare class AKDynamicRangeCompressor extends AKNode {
+
+	static alloc(): AKDynamicRangeCompressor; // inherited from NSObject
+
+	static new(): AKDynamicRangeCompressor; // inherited from NSObject
+
+	attackTime: number;
+
+	readonly isStarted: boolean;
+
+	rampTime: number;
+
+	ratio: number;
+
+	releaseTime: number;
+
+	threshold: number;
+
+	static readonly ComponentDescription: AudioComponentDescription;
+
+	constructor(o: { ratio: AKNode; threshold: number; attackTime: number; releaseTime: number; });
+
+	initRatioThresholdAttackTimeReleaseTime(input: AKNode, ratio: number, threshold: number, attackTime: number, releaseTime: number): this;
+
+	start(): void;
+
+	stop(): void;
+}
+
+declare class AKDynamicRangeCompressorAudioUnit extends AKAudioUnit {
+
+	static alloc(): AKDynamicRangeCompressorAudioUnit; // inherited from NSObject
+
+	static new(): AKDynamicRangeCompressorAudioUnit; // inherited from NSObject
+
+	attackTime: number;
+
+	ratio: number;
+
+	releaseTime: number;
+
+	threshold: number;
 }
 
 declare class AKDynamicsProcessor extends AKNode {
@@ -1827,7 +1972,7 @@ declare class AKMIDISampler extends AKSampler {
 
 	enableMIDIName(midiClient: number, name: string): void;
 
-	midiCCValueChannel(cc: number, value: number, channel: number): void;
+	midiCCValueChannel(controller: number, value: number, channel: number): void;
 
 	receivedMIDINoteOnNoteNumberVelocityChannel(noteNumber: number, velocity: number, channel: number): void;
 }
@@ -1975,7 +2120,11 @@ declare class AKMixer extends AKNode {
 
 	volume: number;
 
+	constructor();
+
 	connect(input: AKNode): void;
+
+	init(inputs: NSArray<AKNode>): this;
 
 	start(): void;
 
@@ -2288,15 +2437,6 @@ declare class AKNodeRecorder extends NSObject {
 	stop(): void;
 }
 
-declare class AKNotifications extends NSObject {
-
-	static alloc(): AKNotifications; // inherited from NSObject
-
-	static new(): AKNotifications; // inherited from NSObject
-
-	static readonly engineRestartedAfterRouteChange: string;
-}
-
 declare class AKOfflineRenderer extends NSObject {
 
 	static alloc(): AKOfflineRenderer; // inherited from NSObject
@@ -2324,9 +2464,9 @@ declare class AKOperationEffect extends AKNode {
 
 	static readonly ComponentDescription: AudioComponentDescription;
 
-	constructor(o: { sporth: AKNode; });
+	constructor(o: { sporth: AKNode; customUgens: string; });
 
-	initSporth(input: AKNode, sporth: string): this;
+	initSporthCustomUgens(input: AKNode, sporth: string, customUgens: NSArray<AKCustomUgen>): this;
 
 	start(): void;
 
@@ -2340,6 +2480,8 @@ declare class AKOperationEffectAudioUnit extends AKAudioUnit {
 	static new(): AKOperationEffectAudioUnit; // inherited from NSObject
 
 	parameters: NSArray<any>;
+
+	addCustomUgen(ugen: AKCustomUgen): void;
 
 	setSporth(sporth: string): void;
 }
@@ -2358,9 +2500,11 @@ declare class AKOperationGenerator extends AKNode {
 
 	static readonly ComponentDescription: AudioComponentDescription;
 
-	constructor(o: { sporth: string; });
+	constructor(o: { sporth: string; customUgens: NSArray<AKCustomUgen>; });
 
-	initWithSporth(sporth: string): this;
+	initWithSporthCustomUgens(sporth: string, customUgens: NSArray<AKCustomUgen>): this;
+
+	restart(): void;
 
 	start(): void;
 
@@ -2376,6 +2520,8 @@ declare class AKOperationGeneratorAudioUnit extends AKAudioUnit {
 	static new(): AKOperationGeneratorAudioUnit; // inherited from NSObject
 
 	parameters: NSArray<any>;
+
+	addCustomUgen(ugen: AKCustomUgen): void;
 
 	setSporth(sporth: string): void;
 
@@ -2846,6 +2992,70 @@ declare class AKPhaseLockedVocoderAudioUnit extends AKAudioUnit {
 	setupAudioFileTableSize(data: interop.Pointer | interop.Reference<number>, size: number): void;
 }
 
+declare class AKPhaser extends AKNode {
+
+	static alloc(): AKPhaser; // inherited from NSObject
+
+	static new(): AKPhaser; // inherited from NSObject
+
+	depth: number;
+
+	feedback: number;
+
+	inverted: number;
+
+	readonly isStarted: boolean;
+
+	lfoBPM: number;
+
+	notchFrequency: number;
+
+	notchMaximumFrequency: number;
+
+	notchMinimumFrequency: number;
+
+	notchWidth: number;
+
+	rampTime: number;
+
+	vibratoMode: number;
+
+	static readonly ComponentDescription: AudioComponentDescription;
+
+	constructor(o: { notchMinimumFrequency: AKNode; notchMaximumFrequency: number; notchWidth: number; notchFrequency: number; vibratoMode: number; depth: number; feedback: number; inverted: number; lfoBPM: number; });
+
+	initNotchMinimumFrequencyNotchMaximumFrequencyNotchWidthNotchFrequencyVibratoModeDepthFeedbackInvertedLfoBPM(input: AKNode, notchMinimumFrequency: number, notchMaximumFrequency: number, notchWidth: number, notchFrequency: number, vibratoMode: number, depth: number, feedback: number, inverted: number, lfoBPM: number): this;
+
+	start(): void;
+
+	stop(): void;
+}
+
+declare class AKPhaserAudioUnit extends AKAudioUnit {
+
+	static alloc(): AKPhaserAudioUnit; // inherited from NSObject
+
+	static new(): AKPhaserAudioUnit; // inherited from NSObject
+
+	depth: number;
+
+	feedback: number;
+
+	inverted: number;
+
+	lfoBPM: number;
+
+	notchFrequency: number;
+
+	notchMaximumFrequency: number;
+
+	notchMinimumFrequency: number;
+
+	notchWidth: number;
+
+	vibratoMode: number;
+}
+
 declare class AKPinkNoise extends AKNode {
 
 	static alloc(): AKPinkNoise; // inherited from NSObject
@@ -3033,6 +3243,12 @@ declare class AKPresetLoaderView extends UIView {
 
 	static new(): AKPresetLoaderView; // inherited from NSObject
 
+	callback: (p1: string) => void;
+
+	label: string;
+
+	presets: NSArray<string>;
+
 	constructor(o: { presets: NSArray<string>; frame: CGRect; callback: (p1: string) => void; });
 
 	initWithPresetsFrameCallback(presets: NSArray<string>, frame: CGRect, callback: (p1: string) => void): this;
@@ -3198,6 +3414,46 @@ declare class AKReverb2 extends AKNode {
 	stop(): void;
 }
 
+declare class AKRhodesPiano extends AKNode {
+
+	static alloc(): AKRhodesPiano; // inherited from NSObject
+
+	static new(): AKRhodesPiano; // inherited from NSObject
+
+	amplitude: number;
+
+	frequency: number;
+
+	readonly isStarted: boolean;
+
+	rampTime: number;
+
+	static readonly ComponentDescription: AudioComponentDescription;
+
+	constructor(o: { frequency: number; amplitude: number; });
+
+	initWithFrequencyAmplitude(frequency: number, amplitude: number): this;
+
+	start(): void;
+
+	stop(): void;
+
+	triggerWithFrequencyAmplitude(frequency: number, amplitude: number): void;
+}
+
+declare class AKRhodesPianoAudioUnit extends AKAudioUnit {
+
+	static alloc(): AKRhodesPianoAudioUnit; // inherited from NSObject
+
+	static new(): AKRhodesPianoAudioUnit; // inherited from NSObject
+
+	amplitude: number;
+
+	frequency: number;
+
+	triggerFrequencyAmplitude(frequency: number, amplitude: number): void;
+}
+
 declare class AKRingModulator extends AKNode {
 
 	static alloc(): AKRingModulator; // inherited from NSObject
@@ -3324,6 +3580,8 @@ declare class AKSampler extends AKNode {
 
 	loadPercussiveSoundFontPresetError(file: string, preset: number): boolean;
 
+	loadSoundFontPresetBankError(file: string, preset: number, bank: number): boolean;
+
 	loadWavError(file: string): boolean;
 
 	playWithNoteNumberVelocityChannel(noteNumber: number, velocity: number, channel: number): void;
@@ -3338,6 +3596,8 @@ declare class AKSettings extends NSObject {
 	static new(): AKSettings; // inherited from NSObject
 
 	static setAudioInputEnabled(value: boolean): void;
+
+	static setBluetoothOptions(value: AVAudioSessionCategoryOptions): void;
 
 	static setBufferLength(value: BufferLength): void;
 
@@ -3363,9 +3623,15 @@ declare class AKSettings extends NSObject {
 
 	static setSessionWithCategoryOptionsError(category: SessionCategory, options: number): boolean;
 
+	static setSessionWithCategoryWithError(category: SessionCategory, options: AVAudioSessionCategoryOptions): boolean;
+
+	static setUseBluetooth(value: boolean): void;
+
 	static readonly audioFormat: AVAudioFormat;
 
 	static audioInputEnabled: boolean;
+
+	static bluetoothOptions: AVAudioSessionCategoryOptions;
 
 	static bufferLength: BufferLength;
 
@@ -3392,6 +3658,86 @@ declare class AKSettings extends NSObject {
 	static sampleRate: number;
 
 	static readonly session: AVAudioSession;
+
+	static useBluetooth: boolean;
+}
+
+declare class AKShaker extends AKNode {
+
+	static alloc(): AKShaker; // inherited from NSObject
+
+	static new(): AKShaker; // inherited from NSObject
+
+	amplitude: number;
+
+	readonly isStarted: boolean;
+
+	rampTime: number;
+
+	static readonly ComponentDescription: AudioComponentDescription;
+
+	start(): void;
+
+	stop(): void;
+
+	triggerWithAmplitude(amplitude: number): void;
+}
+
+declare class AKShakerAudioUnit extends AKAudioUnit {
+
+	static alloc(): AKShakerAudioUnit; // inherited from NSObject
+
+	static new(): AKShakerAudioUnit; // inherited from NSObject
+
+	amplitude: number;
+
+	type: number;
+
+	triggerTypeAmplitude(type: number, amplitude: number): void;
+}
+
+declare class AKSporthStack extends NSObject {
+
+	static alloc(): AKSporthStack; // inherited from NSObject
+
+	static new(): AKSporthStack; // inherited from NSObject
+
+	popFloat(): number;
+
+	popString(): string;
+
+	pushFloat(f: number): void;
+
+	pushString(str: string): void;
+}
+
+declare class AKStepper extends UIView {
+
+	static alloc(): AKStepper; // inherited from NSObject
+
+	static appearance(): AKStepper; // inherited from UIAppearance
+
+	static appearanceForTraitCollection(trait: UITraitCollection): AKStepper; // inherited from UIAppearance
+
+	static appearanceForTraitCollectionWhenContainedIn(trait: UITraitCollection, ContainerClass: typeof NSObject): AKStepper; // inherited from UIAppearance
+
+	static appearanceForTraitCollectionWhenContainedInInstancesOfClasses(trait: UITraitCollection, containerTypes: NSArray<typeof NSObject>): AKStepper; // inherited from UIAppearance
+
+	static appearanceWhenContainedIn(ContainerClass: typeof NSObject): AKStepper; // inherited from UIAppearance
+
+	static appearanceWhenContainedInInstancesOfClasses(containerTypes: NSArray<typeof NSObject>): AKStepper; // inherited from UIAppearance
+
+	static new(): AKStepper; // inherited from NSObject
+
+	callback: (p1: number) => void;
+
+	text: string;
+
+	value: number;
+
+	constructor(o: { text: string; value: number; frame: CGRect; callback: (p1: number) => void; });
+
+	initWithTextValueFrameCallback(text: string, value: number, frame: CGRect, callback: (p1: number) => void): this;
 }
 
 declare class AKStereoFieldLimiter extends AKNode {
@@ -3761,6 +4107,46 @@ declare class AKTremoloAudioUnit extends AKAudioUnit {
 	setupWaveform(size: number): void;
 }
 
+declare class AKTubularBells extends AKNode {
+
+	static alloc(): AKTubularBells; // inherited from NSObject
+
+	static new(): AKTubularBells; // inherited from NSObject
+
+	amplitude: number;
+
+	frequency: number;
+
+	readonly isStarted: boolean;
+
+	rampTime: number;
+
+	static readonly ComponentDescription: AudioComponentDescription;
+
+	constructor(o: { frequency: number; amplitude: number; });
+
+	initWithFrequencyAmplitude(frequency: number, amplitude: number): this;
+
+	start(): void;
+
+	stop(): void;
+
+	triggerWithFrequencyAmplitude(frequency: number, amplitude: number): void;
+}
+
+declare class AKTubularBellsAudioUnit extends AKAudioUnit {
+
+	static alloc(): AKTubularBellsAudioUnit; // inherited from NSObject
+
+	static new(): AKTubularBellsAudioUnit; // inherited from NSObject
+
+	amplitude: number;
+
+	frequency: number;
+
+	triggerFrequencyAmplitude(frequency: number, amplitude: number): void;
+}
+
 declare class AKVariSpeed extends AKNode {
 
 	static alloc(): AKVariSpeed; // inherited from NSObject
@@ -3848,6 +4234,74 @@ declare class AKWhiteNoiseAudioUnit extends AKAudioUnit {
 	amplitude: number;
 }
 
+declare class AKZitaReverb extends AKNode {
+
+	static alloc(): AKZitaReverb; // inherited from NSObject
+
+	static new(): AKZitaReverb; // inherited from NSObject
+
+	crossoverFrequency: number;
+
+	dampingFrequency: number;
+
+	delay: number;
+
+	dryWetMix: number;
+
+	equalizerFrequency1: number;
+
+	equalizerFrequency2: number;
+
+	equalizerLevel1: number;
+
+	equalizerLevel2: number;
+
+	readonly isStarted: boolean;
+
+	lowReleaseTime: number;
+
+	midReleaseTime: number;
+
+	rampTime: number;
+
+	static readonly ComponentDescription: AudioComponentDescription;
+
+	constructor(o: { delay: AKNode; crossoverFrequency: number; lowReleaseTime: number; midReleaseTime: number; dampingFrequency: number; equalizerFrequency1: number; equalizerLevel1: number; equalizerFrequency2: number; equalizerLevel2: number; dryWetMix: number; });
+
+	initDelayCrossoverFrequencyLowReleaseTimeMidReleaseTimeDampingFrequencyEqualizerFrequency1EqualizerLevel1EqualizerFrequency2EqualizerLevel2DryWetMix(input: AKNode, delay: number, crossoverFrequency: number, lowReleaseTime: number, midReleaseTime: number, dampingFrequency: number, equalizerFrequency1: number, equalizerLevel1: number, equalizerFrequency2: number, equalizerLevel2: number, dryWetMix: number): this;
+
+	start(): void;
+
+	stop(): void;
+}
+
+declare class AKZitaReverbAudioUnit extends AKAudioUnit {
+
+	static alloc(): AKZitaReverbAudioUnit; // inherited from NSObject
+
+	static new(): AKZitaReverbAudioUnit; // inherited from NSObject
+
+	crossoverFrequency: number;
+
+	dampingFrequency: number;
+
+	delay: number;
+
+	dryWetMix: number;
+
+	equalizerFrequency1: number;
+
+	equalizerFrequency2: number;
+
+	equalizerLevel1: number;
+
+	equalizerLevel2: number;
+
+	lowReleaseTime: number;
+
+	midReleaseTime: number;
+}
+
 declare class AudioKit extends NSObject {
 
 	static alloc(): AudioKit; // inherited from NSObject
@@ -3874,15 +4328,19 @@ declare class AudioKit extends NSObject {
 
 	static readonly availableInputs: NSArray<AKDevice>;
 
-	static readonly availableOutputs: NSArray<AKDevice>;
-
 	static readonly engine: AVAudioEngine;
 
 	static format: AVAudioFormat;
 
 	static readonly inputDevice: AKDevice;
 
+	static readonly inputs: NSArray<AKDevice>;
+
 	static output: AKNode;
+
+	static readonly outputDevice: AKDevice;
+
+	static readonly outputs: NSArray<AKDevice>;
 
 	static tester: AKTester;
 }
@@ -3890,6 +4348,17 @@ declare class AudioKit extends NSObject {
 declare var AudioKitVersionNumber: number;
 
 declare var AudioKitVersionString: interop.Reference<number>;
+
+declare const enum BaseDirectory {
+
+	Temp = 0,
+
+	Documents = 1,
+
+	Resources = 2,
+
+	Custom = 3
+}
 
 declare const enum BufferLength {
 
@@ -4209,6 +4678,21 @@ declare var EZAudioFileDelegate: {
 	prototype: EZAudioFileDelegate;
 };
 
+declare class EZAudioFileMarker extends NSObject {
+
+	static alloc(): EZAudioFileMarker; // inherited from NSObject
+
+	static new(): EZAudioFileMarker; // inherited from NSObject
+
+	framePosition: number;
+
+	markerID: number;
+
+	name: string;
+
+	type: number;
+}
+
 declare class EZAudioFloatConverter extends NSObject {
 
 	static alloc(): EZAudioFloatConverter; // inherited from NSObject
@@ -4480,6 +4964,8 @@ declare class EZAudioPlot extends EZPlot implements EZAudioDisplayLinkDelegate {
 	performSelectorWithObjectWithObject(aSelector: string, object1: any, object2: any): any;
 
 	redraw(): void;
+
+	resetHistoryBuffers(): void;
 
 	respondsToSelector(aSelector: string): boolean;
 
@@ -4961,6 +5447,19 @@ declare const enum EZRecorderFileType {
 	M4A = 1,
 
 	WAV = 2
+}
+
+declare const enum ExportFormat {
+
+	Wav = 0,
+
+	Aif = 1,
+
+	Mp4 = 2,
+
+	M4a = 3,
+
+	Caf = 4
 }
 
 declare class MultitouchGestureRecognizer extends UIGestureRecognizer {
